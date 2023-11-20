@@ -1,6 +1,6 @@
 from string import Template
 
-class Class:
+class moocClass:
     def __init__(self, id, institution, title, url, class_type, description, rating, rating_max, num_reviews, difficulty, duration, skills, prereqs, free):
         self.id = id
         self.institution = institution
