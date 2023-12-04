@@ -3,6 +3,6 @@ You will need to install the following:
 2. ChromeDriver - https://chromedriver.chromium.org/
     - NOTE: if you are on Chrome version 115 or higher, you will need to find the correct ChromeDriver in the chrome-for-testing 
             area of the website: https://googlechromelabs.github.io/chrome-for-testing/
-    - This download is just an executable. I put my chromedriver-win64 folder in my "C:/Program Files" folder. If you put yours elsewhere, you
+    - This download is just an executable. I put the chromedriver.exe files in the following location: "C:\Program Files (x86)\chromedriver.exe". If you put yours elsewhere, you
       will need to update this path in the places marked in the python web scraper files.
 3. Selenium - install via pip in virtual environment with command "pip install Selenium"

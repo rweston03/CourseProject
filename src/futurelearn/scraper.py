@@ -31,3 +31,6 @@ from selenium import webdriver
 # The skills section ("What will you achieve?") unfortunately does not have an id or distinguishing class, so I'll need to look for a p tag with the inner text "By the end of the
 # course, you'll be able to..." and then look for it's first sibling. (Find all p tags, then iterate through them looking for the p tag whose textContent is "By the end of the course").
 # The first sibling will be a ul. I'll then have to collect the last-child of every li under the ul and concatenate them into a single string for the skills.
+
+def futurelearn_scraper(driver):
+    print("scrape furturelearn")
