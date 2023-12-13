@@ -19,7 +19,7 @@ You can run all the scrapers for all available pages by just running:
 python.exe src/main.py
 ```
 
-However, if you want to run a smaller subset of the scrapers or capture a smaller number of pages, you can run one of these commands:
+However, if you want to run a smaller subset of the scrapers or capture a smaller number of pages, you can run this command:
 
 ```
 # Replace {subset} with your desired subset: coursera, edx, udacity, or all
