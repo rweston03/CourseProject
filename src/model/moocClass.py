@@ -19,7 +19,7 @@ class moocClass(object):
         self.cost_type = cost_type
     
     def toFileString(self):
-        line = Template('$id,$platform,$institution,$title,"$url",$class_type,"$description",$rating,$rating_max,$num_reviews,$difficulty,$duration,"$skills","$prereqs",$cost_type\n')
+        line = Template('$id,$platform,$institution,$title,$url,$class_type,$description,$rating,$rating_max,$num_reviews,$difficulty,$duration,$skills,$prereqs,$cost_type \n')
         self.platform.replace(",", "")
         self.institution.replace(",", "")
         self.title.replace(",", "")
