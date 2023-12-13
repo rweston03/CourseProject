@@ -9,6 +9,11 @@ import os
 import sys
 
 if __name__ == '__main__':
+    # ****************************************************
+    # If you put your chromedriver.exe file somewhere other
+    # than the path below, update the path before running
+    # this program.
+    # ****************************************************
     PATH = "C:\Program Files (x86)\chromedriver.exe"
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--incognito")  # Opens an incognito window
