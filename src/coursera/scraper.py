@@ -9,22 +9,39 @@ import time
 # Coursera start page: https://www.coursera.org/courses?
 # Subsequent pages: https://www.coursera.org/courses?page=2
 
-def coursera_scraper(driver):
+def coursera_scraper(driver, currentDirectory, pageNum):
     print("scrape coursera")
-    courseArray = []
     currCourseArray = []
     courseNum = 0
 
+    if os.path.exists(currentDirectory + "\\coursera.dat"):
+        os.remove(currentDirectory + "\\coursera.dat")
+    if os.path.exists(currentDirectory + "\\coursera.csv"):
+        os.remove(currentDirectory + "\\coursera.csv")
+    if os.path.exists(currentDirectory + "\stats.txt"):
+        os.remove(currentDirectory + "\stats.txt")
+    if os.path.exists(currentDirectory + "\errors.txt"):
+        os.remove(currentDirectory + "\errors.txt")
+    filepathCSV = os.path.join(currentDirectory, 'coursera.csv')
+    c = open(filepathCSV, "a")
+    filepathDAT = os.path.join(currentDirectory, 'coursera.dat')
+    f = open(filepathDAT, "a")
+    filepathERR = os.path.join(currentDirectory, 'errors.txt')
+    e = open(filepathERR, "a")
+    filepathSTATS = os.path.join(currentDirectory, 'stats.txt')
+    c.write("id,platform,institution,title,url,class_type,description,rating,rating_max,num_reviews,difficulty,duration,skills,prereqs,cost_type\n")
 
     driver.get("https://www.coursera.org/courses?")
     time.sleep(5)
     try:
-        main = driver.find_element(By.CSS_SELECTOR, "main.css-gsohuy")
+        main = driver.find_element(By.CSS_SELECTOR, "main")
         lastPage = driver.find_element(By.XPATH, "//button[starts-with(@aria-label, 'Go to last page')]")
         pageCount = lastPage.get_attribute("innerHTML").replace('<span class="cds-button-label">', "").replace("</span>", "")
+        pageCount = int(pageCount)
         currentPage = 1
-
-        while(int(currentPage) <= int(pageCount)):
+        if(pageNum != 0 and pageNum <= pageCount):
+            pageCount = pageNum
+        while(int(currentPage) <= pageCount):
             try:
                 if(int(currentPage) == 1):
                     pageUrl = "https://www.coursera.org/courses?"
@@ -32,10 +49,9 @@ def coursera_scraper(driver):
                     pageUrl = "https://www.coursera.org/courses?page=" + str(currentPage)
                 driver.get(pageUrl)
                 time.sleep(5)
-                main = driver.find_element(By.CSS_SELECTOR, "main.css-gsohuy")
-
+                main = driver.find_element(By.CSS_SELECTOR, "main")
                 courses = main.find_elements(By.CSS_SELECTOR, "div.cds-ProductCard-base.cds-ProductCard-grid.css-wzhpar")
-        
+
                 for course in courses:
                     url = course.find_element(By.CSS_SELECTOR, "a.cds-119.cds-113.cds-115.cds-CommonCard-titleLink.css-si869u.cds-142")
                     currUrl = str(url.get_attribute('href'))
@@ -89,53 +105,52 @@ def coursera_scraper(driver):
                         id = "Coursera" + "-" + str(courseNum)
                         mooc = moocClass(id, "Coursera", institution, title, url.get_attribute('href'), classType, "None", rating, rating_max, num_reviews, difficulty, duration, skills, "None", costType)
                         currCourseArray.append(mooc)
-                
+
                 for course in currCourseArray:
                     driver.get(course.url)
+                    liveUrl = driver.current_url
                     time.sleep(3)
-                    main = driver.find_element(By.CSS_SELECTOR, "section.css-oe48t8")
+                    if(liveUrl == course.url):
+                        main = driver.find_element(By.CSS_SELECTOR, "section.css-oe48t8")
+                        try:
+                            description = main.find_element(By.CSS_SELECTOR, "section.css-v6hgh2 > div.css-kd6yq1 > p.cds-119.cds-Typography-base.css-80vnnb.cds-121")
+                            if(description):
+                                course.description = description.text.replace(",", "").replace("• ", "").replace("\n", " ").strip()
+                        except:
+                            course.description = "None"
+                        try:
+                            prereqs = driver.find_element(By.XPATH, "//div[starts-with(@class, 'cds-Modal-container')]/div/div/div/div/div/div[starts-with(@data-testid, 'cml-viewer')]")
+                            if(prereqs):
+                                prereqs = prereqs.get_attribute("innerHTML").replace("<p><span><span>", "").replace("</span></span></p>", "").replace('<p data-text-variant="body1"><span><span>', ""). replace("<ul><li>", "").replace("</li><li>", " ").replace("</li></ul>", "").replace("&nbsp;", "")
+                                course.prereqs = prereqs.replace(",", "").replace("• ", "").replace("\n", " ").strip()
+                        except:
+                            course.prereqs = "None"
+
+                for course in currCourseArray:
                     try:
-                        description = main.find_element(By.CSS_SELECTOR, "section.css-v6hgh2 > div.css-kd6yq1 > p.cds-119.cds-Typography-base.css-80vnnb.cds-121")
-                        if(description):
-                            course.description = description.text.replace(",", "")
+                        c.write(course.toFileString().lower())
                     except:
-                        course.description = "None"
+                        print("Could not write " + course.title + " to csv file.")
+                        e.write("Could not write course to csv: " + course.url + "\n")
                     try:
-                        prereqs = driver.find_element(By.XPATH, "//div[starts-with(@class, 'cds-Modal-container')]/div/div/div/div/div/div[starts-with(@data-testid, 'cml-viewer')]")
-                        if(prereqs):
-                            prereqs = prereqs.get_attribute("innerHTML").replace("<p><span><span>", "").replace("</span></span></p>", "").replace('<p data-text-variant="body1"><span><span>', ""). replace("<ul><li>", "").replace("</li><li>", " ").replace("</li></ul>", "").replace("&nbsp;", "")
-                            course.prereqs = prereqs.replace(",", "").strip()
+                        f.write(course.toFileString().lower())
                     except:
-                        course.prereqs = "None"
-                    
-                courseArray = courseArray + currCourseArray
+                        print("Could not write " + course.title + " to dat file.")
+                        e.write("Could not write course to dat: " + course.url + "\n")
                 currCourseArray = []
-                currentPage += 1
+                currentPage = currentPage + 1
             except:
                 print("Error parsing Coursera url: " + pageUrl)
 
-        currentDirectory = os.getcwd()
-        currentDirectory = currentDirectory + "\\src\\coursera\\datasets"
-        currentDirectory.replace("\\", "\\\\")
-        if os.path.exists(currentDirectory + "\\coursera.dat"):
-            os.remove(currentDirectory + "\\coursera.dat")
-        if os.path.exists(currentDirectory + "\\coursera.csv"):
-            os.remove(currentDirectory + "\\coursera.csv")
-        if os.path.exists(currentDirectory + "\stats.txt"):
-            os.remove(currentDirectory + "\stats.txt")
-        filepathCSV = os.path.join(currentDirectory, 'coursera.csv')
-        c = open(filepathCSV, "a")
-        filepathDAT = os.path.join(currentDirectory, 'coursera.dat')
-        f = open(filepathDAT, "a")
-        filepathSTATS = os.path.join(currentDirectory, 'stats.txt')
-        s = open(filepathSTATS, "a")
-        s.write(str(len(courseArray)))
-        c.write("id,platform,institution,title,url,class_type,description,rating,rating_max,num_reviews,difficulty,duration,skills,prereqs,cost_type\n")
-        for course in courseArray:
-            c.write(course.toFileString().lower())
-            f.write(course.toFileString().lower())
-        f.close()
         c.close()
+        e.close()
+        f.close()
+ 
+        f = open(filepathDAT, "r")
+        s = open(filepathSTATS, "w")
+        lines = len(f.readlines())
+        s.write(str(lines))
+        f.close()
         s.close()
 
     except:
