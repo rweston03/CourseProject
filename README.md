@@ -6,10 +6,10 @@ This course project scrapes course information from Coursera, Edx, and Udacity.
 You will need to install the following:
 1. Google Chrome (if you don't already have it) - https://www.google.com/chrome/
 2. ChromeDriver - https://chromedriver.chromium.org/
-    - NOTE: if you are on Chrome version 115 or higher, you will need to find the correct ChromeDriver in the chrome-for-testing 
+    - If you are on Chrome version 115 or higher, you will need to find the correct ChromeDriver in the chrome-for-testing 
             area of the website: https://googlechromelabs.github.io/chrome-for-testing/
     - This download is just an executable. I put the chromedriver.exe files in the following location: "C:\Program Files (x86)\chromedriver.exe". If you put yours elsewhere, you
-      will need to update this path in the places marked in the python web scraper files.
+      will need to update this path on line 17 in main.py.
 3. Selenium - install via pip in virtual environment with command "pip install Selenium"
 
 ## Running the Program
