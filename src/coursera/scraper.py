@@ -10,10 +10,14 @@ import time
 # Subsequent pages: https://www.coursera.org/courses?page=2
 
 def coursera_scraper(driver, currentDirectory, pageNum):
-    print("scrape coursera")
+    print("Scrape coursera")
+
+    #Initialize variables
     currCourseArray = []
     courseNum = 0
+    totalCourses = 0
 
+    # Clear out existing files if they exist and prepare new files for writing
     if os.path.exists(currentDirectory + "\\coursera.dat"):
         os.remove(currentDirectory + "\\coursera.dat")
     if os.path.exists(currentDirectory + "\\coursera.csv"):
@@ -23,52 +27,80 @@ def coursera_scraper(driver, currentDirectory, pageNum):
     if os.path.exists(currentDirectory + "\errors.txt"):
         os.remove(currentDirectory + "\errors.txt")
     filepathCSV = os.path.join(currentDirectory, 'coursera.csv')
-    c = open(filepathCSV, "a")
+    c = open(filepathCSV, "a", encoding="utf-8")
     filepathDAT = os.path.join(currentDirectory, 'coursera.dat')
-    f = open(filepathDAT, "a")
+    f = open(filepathDAT, "a", encoding="utf-8")
     filepathERR = os.path.join(currentDirectory, 'errors.txt')
-    e = open(filepathERR, "a")
+    e = open(filepathERR, "a", encoding="utf-8")
     filepathSTATS = os.path.join(currentDirectory, 'stats.txt')
     c.write("id,platform,institution,title,url,class_type,description,rating,rating_max,num_reviews,difficulty,duration,skills,prereqs,cost_type\n")
 
+    # Fetch the first course page
     driver.get("https://www.coursera.org/courses?")
+
+    # Add sleep setting to allow page to fully load
     time.sleep(5)
     try:
+        # Get total number of course catalog pages
         main = driver.find_element(By.CSS_SELECTOR, "main")
         lastPage = driver.find_element(By.XPATH, "//button[starts-with(@aria-label, 'Go to last page')]")
         pageCount = lastPage.get_attribute("innerHTML").replace('<span class="cds-button-label">', "").replace("</span>", "")
         pageCount = int(pageCount)
+
+        # Set current page to 1
         currentPage = 1
+
+        # If a desired number of pages has been passed in, use it if it is under the total number of course catalog pages
+        # Otherwise, use the total
         if(pageNum != 0 and pageNum <= pageCount):
             pageCount = pageNum
+
+        # Scrape course catalog pages until the last page is reached
         while(int(currentPage) <= pageCount):
             try:
+                # Get the current course catalog page
                 if(int(currentPage) == 1):
                     pageUrl = "https://www.coursera.org/courses?"
                 else:
                     pageUrl = "https://www.coursera.org/courses?page=" + str(currentPage)
                 driver.get(pageUrl)
+                # Wait for it to load
                 time.sleep(5)
-                main = driver.find_element(By.CSS_SELECTOR, "main")
-                courses = main.find_elements(By.CSS_SELECTOR, "div.cds-ProductCard-base.cds-ProductCard-grid.css-wzhpar")
+                try:
+                    # Wait for main element and courses to be displayed
+                    main = driver.find_element(By.CSS_SELECTOR, "main")
+                    courses = main.find_elements(By.CSS_SELECTOR, "div.cds-ProductCard-base.cds-ProductCard-grid.css-wzhpar")
+                except:
+                    # If the necessary elements aren't displayed, get the page again and wait a little longer for the elements to be displayed
+                    if(int(currentPage) == 1):
+                        pageUrl = "https://www.coursera.org/courses?"
+                    else:
+                        pageUrl = "https://www.coursera.org/courses?page=" + str(currentPage)
+                    driver.get(pageUrl)
+                    time.sleep(10)
+                    main = driver.find_element(By.CSS_SELECTOR, "main")
+                    courses = main.find_elements(By.CSS_SELECTOR, "div.cds-ProductCard-base.cds-ProductCard-grid.css-wzhpar")
 
+                # Iterate through the courses on the course catalog page and scrape the available information for each course
                 for course in courses:
                     url = course.find_element(By.CSS_SELECTOR, "a.cds-119.cds-113.cds-115.cds-CommonCard-titleLink.css-si869u.cds-142")
                     currUrl = str(url.get_attribute('href'))
+
+                    # Check to make sure that the course element in the course catalog points to a course detail page instead of an advertisement or some other page
                     if(currUrl.startswith("https://www.coursera.org/professional-certificates/") or currUrl.startswith("https://www.coursera.org/specializations/") or currUrl.startswith("https://www.coursera.org/learn/")):
                         courseNum = courseNum + 1
                         title = url.find_element(By.CSS_SELECTOR, "h3.cds-119.cds-CommonCard-title.css-e7lgfl.cds-121")
-                        title = title.text.replace(",", "")
+                        title = title.text.replace(",", "").replace("\n","")
                         try:
                             institution = course.find_element(By.CSS_SELECTOR, "div.cds-ProductCard-header > div.cds-ProductCard-partnerInfo > div.cds-CommonCard-interactiveArea > div.css-oejgx0.cds-ProductCard-partners > p.cds-119.cds-ProductCard-partnerNames.css-dmxkm1.cds-121")
                             if(institution):
-                                institution = institution.text.replace(",", "")
+                                institution = institution.text.replace(",", "").replace("\n","")
                         except:
                             institution = "Coursera"
                         try:
                             skills = course.find_element(By.CSS_SELECTOR, "div.cds-ProductCard-body > div.cds-CommonCard-bodyContent > p.cds-119.cds-Typography-base.css-dmxkm1.cds-121")
                             if(skills):
-                                skills = skills.text.replace("Skills you'll gain: ", "").replace(", ", " - ")
+                                skills = skills.text.replace("Skills you'll gain: ", "").replace(", ", " - ").replace("\n","")
                         except:
                             skills = "None"
                         try:
@@ -106,6 +138,7 @@ def coursera_scraper(driver, currentDirectory, pageNum):
                         mooc = moocClass(id, "Coursera", institution, title, url.get_attribute('href'), classType, "None", rating, rating_max, num_reviews, difficulty, duration, skills, "None", costType)
                         currCourseArray.append(mooc)
 
+                # After scraping the course catalog page, iterate through the courses found and scrape their detail pages
                 for course in currCourseArray:
                     driver.get(course.url)
                     liveUrl = driver.current_url
@@ -126,6 +159,9 @@ def coursera_scraper(driver, currentDirectory, pageNum):
                         except:
                             course.prereqs = "None"
 
+                # After scraping the current round of courses on the course catalog page, write the courses to the csv and dat files
+                # Write any errors to the error file
+                # Add the currCourseArray length to the totalCourses count for the stat file
                 for course in currCourseArray:
                     try:
                         c.write(course.toFileString().lower())
@@ -137,7 +173,11 @@ def coursera_scraper(driver, currentDirectory, pageNum):
                     except:
                         print("Could not write " + course.title + " to dat file.")
                         e.write("Could not write course to dat: " + course.url + "\n")
+                # Add the currCourseArray length to the totalCourses count for the stat file
+                totalCourses = totalCourses + len(currCourseArray)
+                # Clear out the currCourseArray in preparation for the next detail page
                 currCourseArray = []
+                # Advance the scraper to the next page
                 currentPage = currentPage + 1
             except:
                 print("Error parsing Coursera url: " + pageUrl)
@@ -146,11 +186,9 @@ def coursera_scraper(driver, currentDirectory, pageNum):
         e.close()
         f.close()
  
-        f = open(filepathDAT, "r")
+        # Write the total number of courses scraped to the stats file
         s = open(filepathSTATS, "w")
-        lines = len(f.readlines())
-        s.write(str(lines))
-        f.close()
+        s.write(str(totalCourses))
         s.close()
 
     except:
