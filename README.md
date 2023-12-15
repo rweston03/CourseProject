@@ -1,6 +1,6 @@
 # CourseProject
 
-This course project scrapes course information from Coursera, Edx, and Udacity.
+This course project uses Python 3.6 and scrapes course information from Coursera, Edx, and Udacity.
 
 ## Setup
 You will need to install the following:
