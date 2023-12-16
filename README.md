@@ -2,6 +2,9 @@
 
 This course project uses Python 3.6 and scrapes course information from Coursera, Edx, and Udacity.
 
+## Demo Video
+https://www.youtube.com/watch?v=S8ERzgr1fkA
+
 ## Setup
 You will need to install the following:
 1. Google Chrome (if you don't already have it) - https://www.google.com/chrome/
