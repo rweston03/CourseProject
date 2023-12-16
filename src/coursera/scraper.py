@@ -13,9 +13,9 @@ def coursera_scraper(driver, currentDirectory, pageNum):
     print("Scrape coursera")
 
     #Initialize variables
-    currCourseArray = []
-    courseNum = 0
-    totalCourses = 0
+    currCourseArray = [] # Stores array of courses scraped from current course catalog page
+    courseNum = 0 # Stores the course number for use in the unique course id added to the data sets
+    totalCourses = 0 # Stores the total number of courses scraped from the platform for the stats file
 
     # Clear out existing files if they exist and prepare new files for writing
     if os.path.exists(currentDirectory + "\\coursera.dat"):
